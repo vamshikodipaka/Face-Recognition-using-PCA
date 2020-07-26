@@ -1,0 +1,23 @@
+function [cc_1, cc_2, F_prime] = FindTransformation(F1_bar, F_pxco, F_pyco)
+%% FINDTRANSFORMATION finds the best transformation, 
+%   
+%   Inputs
+%       F1_bar    - Feature of an Image [(x,y) coordinates]
+%       F_pxco     - Predetermined Sample Feature [x coordinate]
+%       F_pyco     - Predetermined Sample Feature [y coordinate]
+%
+%   Output
+%       c_1, c_2 - Parameters of Affine Transformation
+%       F_prime  - New Average Location of Features in 64 x 64 image
+
+%% Function starts here
+
+F_1 = [F1_bar ones(5,1)];
+
+cc_1 = pinv(F_1)*F_px;  % To Calculate Parameters of Affine Transform (given by (A,b))
+cc_2 = pinv(F_1)*F_py;
+
+F_prime = F_1 * [cc_1 cc_2]; 
+
+end
+

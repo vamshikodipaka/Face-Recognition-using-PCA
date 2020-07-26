@@ -1,0 +1,96 @@
+% Face recognition project, 2018 - 2020
+%
+% Vamshi Kodipaka: vamshikodipaka@gmail.com
+% Fabio: fabiocyro12@hotmail.com
+%
+%%First step to RUN script
+
+%% Code for normalizing the imgs to a predef location given by F_xco and F_yco
+
+% This file should be kept in the same dir with imgs and Feats //files//data.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Clearing workspace by
+clc;
+clear;
+
+%% FIND_TRANSFORMATION IMPLEMENTED HERE
+% PUBLIC_ACCESS
+% ////////////////////////////////// %
+% Read the Coords of Feature_Points
+
+Feat={}; % Creating an empty cell to store feat matrixs
+F_dir = dir('*.txt');
+
+for i = 1:length(F_dir)
+    
+    file_name = F_dir(i).name;
+    fid = fopen(file_name,'r'); % Opening text files
+    FF1=textscan(fid,'%f %f'); % Reading the current text file
+    fclose(fid);
+    
+    Feat{i}=FF1; % Store feature matrices for all imgs in the dir
+    
+end
+
+F1_start = [Feat{1}{1} Feat{1}{2}];
+F_bar(:,:,2) = F1_start;
+
+% Predetermined Locations in 64 x 64 img
+F_xco = [13 50 34 16 48]';
+F_yco = [20 20 34 50 50]';
+
+flag = true;
+
+while flag
+    
+    % Computing the best transformation for the first img
+    [cc_1, cc_2, F_prime] = FindTransformation(F1_bar(:,:,2), F_xco, F_yco);
+    F1_bar(:,:,1) = F_prime;
+    
+    % Computing for all imgs
+    Fi_prime = 0;
+    
+    for Index = 1:length(F_dir)
+        F_1 = [Feat{Index}{1} Feat{Index}{2}];
+        [cc_1(:,Index), cc_2(:,Index), F_prime] = FindTransformation(F_1, F1_bar(:,1,1), F1_bar(:,2,1));
+        Fi_prime = Fi_prime + F_prime;
+    end
+    
+    F1_bar(:,:,2) = Fi_prime/length(F_dir); % Average of Transformed Feature Locations
+    err = max(max(abs(F1_bar(:,:,2)-F1_bar(:,:,1))));
+    
+    if  err <=3 % Check for Convergence
+        flag = false;
+    end
+end
+
+%% APPLYING TRANSFORMATION IMPLEMENTED HERE
+%%////////////////////////////////////////
+% Create a dir to store Normalized imgs
+if ~ exist ('Faces_Normalized', 'dir' )
+    mkdir ('Faces_Normalized')
+end
+
+Path = './Faces_Normalized/';
+I_dir =  [dir(fullfile('*jpg')); dir(fullfile('*JPG')); dir(fullfile('*jpeg'))];
+
+for Index = 1:length(I_dir)
+    
+    % Reading imgs from dir-----------
+    file = I_dir(Index).name;
+    img = rgb2gray(imread(file));
+    %%%......
+    % Applying Transformation to imgs to get 64 x 64 Normalized img-----------
+    tempr = [0 0 1]';
+    t_form = affine2d([cc_1(:,Index) cc_2(:,Index) tempr]); 
+    % <<Calculating Affine Transform for each img
+    
+    R_out = imref2d([64 64]);
+    Norm_img{Index} = imwarp(img,t_form,'OutputView',R_out); % Transformed 64 x 64 img
+    
+    % ......../Saving Normalized file-
+    save_file_name = strcat(Path,file);
+    imwrite(Norm_img{Index},save_file_name,'jpg');
+    
+end

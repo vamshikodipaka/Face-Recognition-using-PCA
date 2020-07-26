@@ -1,0 +1,45 @@
+function [P] = PCATransformationMatrix(Dim, No_pca)
+%% PCA_TRANSFORMATION_MATRIX computes the Projec Matrix 'P'
+%  ---- Inputs::
+%       D   - Mat containing each Training-Images as 1Dvector
+%       No_pca - No. of Principal Components (Selected by the user)
+%  ---- Outputs::   P  - PCA Projection Mat
+
+%%
+
+[row, ~] = size(Dim);
+
+Im_mean = mean(Dim);       % Mean of all images (1 x d)
+Mat_MEAN = repmat(Im_mean,row,1);  % Duplicate mean in a Mat form
+DMx = double(Dim) - Mat_MEAN;
+
+%Computing Co-varinace Mat>>
+Sigma = (DMx * DMx')./(row-1);
+%--------
+% Now Covariance Met is computed for DxD' instead of D'xD
+% No. of Non-zero Eigen Values of the Covar Mat is limited to 'r' and for only in 'k' Eigen
+% Vects(V) with respect to the 'k' biggest Eigen Values
+
+% Calculating Eigen Vectors (V) and Eigen Values (E)
+[V, E_des] = eig(Sigma);
+
+% Make Diag Mat D as a Single vector in Descending Order
+E_des = diag(E_des);
+[~, Idx] = sort(E_des,1,'descend');
+
+% Sorting Eigen Vectors with respect to the Eigen Values
+%PCA_purpose
+PrincComp = [];
+
+for i = 1:row
+    PrincComp = [PrincComp V(:,Idx(i))];
+end
+%...........PCA.........>> 
+% Calculaing PCA Transformation Mat //Projection Mat?>>
+P = DMx' * PrincComp;
+
+% Limiting the PCA Transformation Mat to no of PrincipalComponents
+P = P(:,1:No_pca);
+
+end
+
