@@ -18,3 +18,6 @@ Manual for Face Recognition Module
 
 	The description of code is given in commentlines itself.
 
+PLEASE DONT FORGET TO ADD THE NORM_IMAGES FOLDER WHICH HAS TO CONTATIN TRAIN_IMAGES AND TEST_IMAGES FOLDERS
+
+
